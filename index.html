@@ -240,17 +240,15 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
     import { getDatabase, ref, set, update, onValue, get, child } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
 
-    // TODO_FIREBASE_CONFIG:
-    // Replace everything inside this object with the config Firebase gives you.
     const firebaseConfig = {
-      apiKey: "PASTE_YOURS_HERE",
-      authDomain: "PASTE_YOURS_HERE",
-      databaseURL: "PASTE_YOURS_HERE",
-      projectId: "PASTE_YOURS_HERE",
-      storageBucket: "PASTE_YOURS_HERE",
-      messagingSenderId: "PASTE_YOURS_HERE",
-      appId: "PASTE_YOURS_HERE"
-    };
+  apiKey: "AIzaSyCSmLqPuOkl7md_-rz-sXisd0LkODwf4JE",
+  authDomain: "the-boys-quote-game.firebaseapp.com",
+  databaseURL: "https://the-boys-quote-game-default-rtdb.firebaseio.com/",
+  projectId: "the-boys-quote-game",
+  storageBucket: "the-boys-quote-game.firebasestorage.app",
+  messagingSenderId: "161155932547",
+  appId: "1:161155932547:web:1b400b841fd70cac2a16b6"
+};
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
