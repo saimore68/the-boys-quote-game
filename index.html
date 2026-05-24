@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Boys Quote Game Auto</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg: #09090f;
+      --panel: rgba(17, 24, 39, .86);
+      --panel2: rgba(30, 41, 59, .92);
+      --blue: #38bdf8;
+      --pink: #ec4899;
+      --purple: #8b5cf6;
+      --green: #22c55e;
+      --gold: #f59e0b;
+      --red: #ef4444;
+      --muted: #cbd5e1;
+    }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      color: white;
+      min-height: 100vh;
+      padding: 18px;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(56,189,248,.28), transparent 30%),
+        radial-gradient(circle at 85% 18%, rgba(236,72,153,.22), transparent 34%),
+        radial-gradient(circle at 45% 95%, rgba(139,92,246,.24), transparent 36%),
+        linear-gradient(145deg, #050507, #111827 55%, #0f172a);
+      overflow-x: hidden;
+    }
+    body:before {
+      content:"";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.8), transparent);
+    }
+    h1, h2, h3 { text-align: center; margin-top: 0; }
+    h1 {
+      font-size: clamp(34px, 6vw, 72px);
+      letter-spacing: -2px;
+      margin-bottom: 4px;
+      text-shadow: 0 0 28px rgba(56,189,248,.28);
+    }
+    .container { max-width: 1280px; margin: 0 auto; position: relative; z-index: 1; }
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 28px;
+      padding: 22px;
+      margin: 16px 0;
+      box-shadow: 0 18px 55px rgba(0,0,0,.38);
+      backdrop-filter: blur(14px);
+    }
+    .top-bar, .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      margin: 14px 0;
+    }
+    input, button, textarea {
+      padding: 13px 16px;
+      border-radius: 16px;
+      border: none;
+      font-size: 16px;
+    }
+    input, textarea {
+      background: rgba(248,250,252,.96);
+      color: #0f172a;
+      outline: none;
+    }
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      font-size: 14px;
+      line-height: 1.35;
+      font-family: Consolas, monospace;
+    }
+    button {
+      cursor: pointer;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: white;
+      font-weight: 900;
+      box-shadow: 0 8px 22px rgba(37,99,235,.2);
+      transition: transform .12s ease, filter .12s ease;
+    }
+    button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+    button:disabled { opacity: .45; cursor: not-allowed; transform:none; }
+    .secondary { background: linear-gradient(135deg, #334155, #475569); }
+    .danger { background: linear-gradient(135deg, #dc2626, #991b1b); }
+    .success { background: linear-gradient(135deg, #059669, #16a34a); }
+    .gold { background: linear-gradient(135deg, #f59e0b, #b45309); }
+    .small { font-size: 14px; color: var(--muted); text-align: center; }
+    .hidden { display: none !important; }
+    .room-code {
+      font-size: clamp(32px, 6vw, 64px);
+      font-weight: 950;
+      text-align: center;
+      letter-spacing: 8px;
+      color: #e0f2fe;
+      text-shadow: 0 0 24px rgba(56,189,248,.55);
+      margin: 8px 0;
+    }
+    .tv-grid {
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+    .tv-main { min-height: 520px; display:flex; flex-direction:column; }
+    .round-pill {
+      display:inline-flex;
+      align-self:center;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 18px;
+      font-weight: 900;
+      color: #cffafe;
+      background: rgba(14,165,233,.18);
+      border: 1px solid rgba(125,211,252,.25);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing:.5px;
+    }
+    .question-title {
+      text-align:center;
+      font-size: clamp(22px, 3vw, 38px);
+      font-weight: 950;
+      color: #f8fafc;
+      margin: 8px 0 16px;
+    }
+    .quote-stage {
+      flex:1;
+      background:
+        linear-gradient(135deg, rgba(15,23,42,.98), rgba(30,41,59,.9)),
+        radial-gradient(circle at 50% 0%, rgba(56,189,248,.22), transparent 40%);
+      border: 2px solid rgba(148,163,184,.22);
+      border-radius: 32px;
+      padding: 30px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      box-shadow: inset 0 0 40px rgba(0,0,0,.25);
+      min-height: 270px;
+    }
+    .quote-text {
+      font-size: clamp(34px, 5.6vw, 78px);
+      line-height: 1.08;
+      font-weight: 950;
+      letter-spacing: -2px;
+      text-wrap: balance;
+    }
+    .choice-grid {
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 14px;
+      width:100%;
+      max-width: 880px;
+    }
+    .choice-box {
+      background: rgba(15,23,42,.95);
+      border: 2px solid rgba(255,255,255,.14);
+      border-radius: 22px;
+      padding: 20px;
+      font-size: clamp(24px, 3vw, 42px);
+      font-weight: 950;
+      text-align:center;
+    }
+    .timer-wrap {
+      width: min(270px, 64vw);
+      aspect-ratio: 1;
+      margin: 14px auto;
+      display: grid;
+      place-items: center;
+    }
+    .timer-ring {
+      width: 100%;
+      height: 100%;
+      border-radius: 999px;
+      background: conic-gradient(var(--green) var(--progress), #334155 0);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 42px rgba(34,197,94,.18);
+      transition: background .2s linear;
+    }
+    .timer-inner {
+      width: 78%;
+      height: 78%;
+      border-radius: 999px;
+      background: #09090f;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.09);
+    }
+    .timer-number { font-size: clamp(64px, 10vw, 112px); font-weight: 950; }
+    .timer-low .timer-ring { animation: pulse .55s infinite alternate; }
+    @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.035); } }
+    .answer-reveal {
+      display: none;
+      background: linear-gradient(135deg, rgba(5,150,105,.9), rgba(22,163,74,.85));
+      border-radius: 22px;
+      padding: 18px;
+      text-align:center;
+      font-size: clamp(22px, 3vw, 38px);
+      font-weight: 950;
+      margin-top: 14px;
+      box-shadow: 0 0 28px rgba(34,197,94,.22);
+    }
+    .players, .answers {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 12px 0;
+    }
+    .player-card, .answer-card {
+      background: rgba(2,6,23,.62);
+      border: 1px solid rgba(148,163,184,.22);
+      border-radius: 20px;
+      padding: 14px;
+      min-width: 165px;
+      text-align: center;
+    }
+    .player-name { font-weight:950; font-size:18px; }
+    .score { color:#fef3c7; font-weight:900; font-size:24px; }
+    .answer-card { min-width: 245px; max-width: 340px; text-align:left; }
+    .answer-text {
+      background:rgba(30,41,59,.9);
+      border-radius:14px;
+      padding:12px;
+      margin:8px 0;
+      min-height:45px;
+      color:#f8fafc;
+    }
+    .score-buttons button { padding: 8px 10px; margin: 4px 2px; font-size: 13px; border-radius:12px; }
+    .correct-card { border-color: rgba(34,197,94,.75); box-shadow: 0 0 24px rgba(34,197,94,.14); }
+    .wrong-card { border-color: rgba(239,68,68,.55); opacity:.82; }
+    .auto-badge {
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      margin-top:6px;
+      background:rgba(148,163,184,.18);
+    }
+    .correct-badge { background:rgba(34,197,94,.25); color:#bbf7d0; }
+    .wrong-badge { background:rgba(239,68,68,.22); color:#fecaca; }
+    .phone {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .phone-question {
+      background: rgba(2,6,23,.7);
+      border: 1px solid rgba(148,163,184,.22);
+      border-radius:24px;
+      padding:22px;
+      text-align:center;
+      font-size:28px;
+      line-height:1.18;
+      font-weight:950;
+      margin:14px 0;
+    }
+    .phone-choice {
+      width:100%;
+      margin:7px 0;
+      font-size:20px;
+      padding:16px;
+      border-radius:18px;
+    }
+    .selected {
+      outline: 4px solid rgba(56,189,248,.55);
+      filter: brightness(1.15);
+    }
+    .guess-input { width:100%; margin:8px 0; font-size:20px; }
+    .podium {
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      gap:18px;
+      margin:28px 0 12px;
+      min-height:300px;
+    }
+    .podium-place {
+      width: min(30%, 230px);
+      border-radius:24px 24px 10px 10px;
+      border:1px solid rgba(255,255,255,.16);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      padding:16px 10px;
+      text-align:center;
+      box-shadow:0 14px 35px rgba(0,0,0,.34);
+      animation: rise .55s ease both;
+    }
+    .first { height:270px; background:linear-gradient(#f59e0b, #78350f); order:2; }
+    .second { height:220px; background:linear-gradient(#94a3b8, #334155); order:1; animation-delay:.12s; }
+    .third { height:180px; background:linear-gradient(#d97706, #7c2d12); order:3; animation-delay:.24s; }
+    .medal { font-size:48px; margin-bottom:8px; }
+    .podium-name { font-size:24px; font-weight:950; word-break:break-word; }
+    .podium-score { font-size:19px; color:#fef3c7; margin-top:8px; font-weight:900; }
+    @keyframes rise { from { transform: translateY(42px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+    @media (max-width: 860px) {
+      body { padding:10px; }
+      .tv-grid { grid-template-columns: 1fr; }
+      .quote-text { font-size: 34px; }
+      .choice-grid { grid-template-columns: 1fr; }
+      .timer-wrap { width: 215px; }
+      .room-code { letter-spacing:4px; }
+      .podium { gap:8px; min-height:230px; }
+      .first { height:210px; }
+      .second { height:170px; }
+      .third { height:140px; }
+      .podium-name { font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>The Boys Quote Game</h1>
+    <p class="small">TV host screen + phone answer machines</p>
+
+    <div class="card" id="modeCard">
+      <h2>Choose Mode</h2>
+      <div class="top-bar">
+        <button onclick="chooseMode('host')">Host / TV Screen</button>
+        <button class="secondary" onclick="chooseMode('player')">Player Phone</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="setupCard">
+      <h2 id="setupTitle">Join or Create Room</h2>
+      <div class="top-bar">
+        <input id="nameInput" placeholder="Your name" />
+        <input id="roomInput" placeholder="Room code" maxlength="6" />
+        <button id="createBtn" onclick="createRoom()">Create Room</button>
+        <button class="secondary" onclick="joinRoom()">Join Room</button>
+      </div>
+      <p class="small" id="setupHint"></p>
+    </div>
+
+    <div id="hostGame" class="hidden">
+      <div class="card">
+        <h2>Host Room</h2>
+        <div class="room-code" id="hostRoomCode"></div>
+        <p class="small">Players join with this code. Put this screen on the TV.</p>
+        <div class="top-bar">
+          <button class="success" onclick="startAutoGame()">Start Game</button>
+          <button class="secondary" onclick="pauseAutoGame()">Pause</button>
+          <button class="gold" onclick="showPodium()">Winner Podium</button>
+          <button class="danger" onclick="resetRoom()">Reset Game</button>
+        </div>
+        <p class="small">After you press Start Game, rounds run automatically: question → 30 sec answers → auto score → answer reveal → next round.</p>
+      </div>
+
+      <div class="tv-grid">
+        <div class="card tv-main">
+          <div class="round-pill" id="hostTypePill">Waiting</div>
+          <div class="question-title" id="hostPrompt">Press Start Game</div>
+          <div class="small" id="hostAutoStatus" style="font-size:20px;margin-bottom:12px;">Waiting to start...</div>
+          <div class="quote-stage" id="quoteStage">
+            <div class="quote-text" id="hostQuestionDisplay">The question will show here.</div>
+          </div>
+          <div class="answer-reveal" id="hostCorrectAnswer"></div>
+        </div>
+
+        <div class="card">
+          <h2>Timer</h2>
+          <div class="timer-wrap" id="timerWrap">
+            <div class="timer-ring" id="timerRing" style="--progress:0%;">
+              <div class="timer-inner">
+                <div class="timer-number" id="timerNumber">30</div>
+              </div>
+            </div>
+          </div>
+          <h2>Players</h2>
+          <div class="players" id="hostPlayers"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Submitted Answers</h2>
+        <p class="small">Host gives points after the timer ends. Multiple correct people count, like Jimmy & Isaiah.</p>
+        <div class="answers" id="hostAnswers"></div>
+      </div>
+
+      <div class="card hidden" id="podiumCard">
+        <h2>Winner Podium</h2>
+        <div class="podium" id="podium"></div>
+      </div>
+
+      <div class="card">
+        <h2>Add / Edit Quotes</h2>
+        <p class="small">Format: quote | person. For multiple people, use Jimmy & Isaiah.</p>
+        <textarea id="quoteEditor"></textarea>
+        <div class="top-bar">
+          <button onclick="saveQuotesToRoom()">Save Quotes</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="playerGame" class="hidden phone">
+      <div class="card">
+        <h2>Player Phone</h2>
+        <div class="room-code" id="playerRoomCode"></div>
+        <p class="small" id="playerStatus"></p>
+      </div>
+
+      <div class="card">
+        <h2>Your Score</h2>
+        <div class="room-code" id="myScore">0</div>
+      </div>
+
+      <div class="card">
+        <div class="round-pill" id="phoneTypePill">Waiting</div>
+        <div class="phone-question" id="phoneQuestionDisplay">Waiting for host...</div>
+
+        <div id="phoneTextAnswer">
+          <input class="guess-input" id="phoneGuessInput" placeholder="Type your answer" />
+          <button style="width:100%;" id="submitBtn" onclick="submitTextGuess()">Submit Answer</button>
+        </div>
+
+        <div id="phoneMultipleChoice" class="hidden"></div>
+
+        <div class="timer-wrap" id="phoneTimerWrap">
+          <div class="timer-ring" id="phoneTimerRing" style="--progress:0%;">
+            <div class="timer-inner">
+              <div class="timer-number" id="phoneTimerNumber">30</div>
+            </div>
+          </div>
+        </div>
+
+        <p class="small" id="guessStatus"></p>
+        <div class="answer-reveal" id="phoneCorrectAnswer"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+    import { getDatabase, ref, set, update, onValue, get } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCSmLqPuOkl7md_-rz-sXisd0LkODwf4JE",
+      authDomain: "the-boys-quote-game.firebaseapp.com",
+      databaseURL: "https://the-boys-quote-game-default-rtdb.firebaseio.com/",
+      projectId: "the-boys-quote-game",
+      storageBucket: "the-boys-quote-game.firebasestorage.app",
+      messagingSenderId: "161155932547",
+      appId: "1:161155932547:web:1b400b841fd70cac2a16b6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const defaultQuotes = [
+      { quote: "Okay love you all and I can’t wait to fuck you tomorrow morning", person: "Isaiah" },
+      { quote: "I mean if me and Weber get married I’ll make sure everyone gets cucked cause WE ARE FUCKING ‘You may now fuck the bride’ ahh wedding", person: "Isaiah" },
+      { quote: "If I ever went to prison I want the cell diddys in", person: "Isaiah" },
+      { quote: "Gimme the two handed deluxe", person: "Isaiah" },
+      { quote: "OMG pounder, I don’t even know her", person: "Jimmy & Isaiah" },
+      { quote: "Shake hands touch dicks that’s what I say", person: "Isaiah" },
+      { quote: "The kids keep staring at you because they have a better gaydar than we do", person: "Isaiah" },
+      { quote: "i don't wanna be a wife", person: "Isaiah" },
+      { quote: "It’s because I’m gay", person: "Isaiah" },
+      { quote: "Teenage mutant shitter urinals", person: "Isaiah" },
+      { quote: "You’d think I’m a 60 year old ran through gay guy with the way shit is just shooting out my ass rn", person: "Isaiah" },
+      { quote: "i've come to the realization we don't need to see each other everyday", person: "Isaiah" },
+      { quote: "brick floating in water", person: "Rocco" },
+      { quote: "live laugh love white women", person: "Rocco" },
+      { quote: "I’ll plow her driveway and then plow her next, two in one deal", person: "Rocco" },
+      { quote: "Why is sean aura farming and I'm bumming it", person: "Rocco" },
+      { quote: "suck the wrong dick your gonna get shot", person: "Rocco" },
+      { quote: "suck my black weenier", person: "Rocco" },
+      { quote: "money laundering does wonders", person: "Rocco" },
+      { quote: "if i had the opportunity to fuck someone's wife like 10/10 baddie no consequences it's fair game", person: "Rocco" },
+      { quote: "ima hit jimmy in the head with a coconut maybe it'll change his filter", person: "Rocco" },
+      { quote: "Well there’s only wiggas there", person: "Rocco" },
+      { quote: "It takes a lot of years of stretching, you won’t believe how many more I got back there", person: "Rocco" },
+      { quote: "You js do illegal shit and don’t get caught", person: "Sean" },
+      { quote: "Fuuhhhhh", person: "Sean" },
+      { quote: "You already have enough color in your life", person: "Sean" },
+      { quote: "Maybe dan wants the cuck chair at the wedding", person: "Jimmy" },
+      { quote: "that's the sperm of my African ancestors in there", person: "Jimmy" },
+      { quote: "Dan you’re invited to the honeymoon", person: "Jimmy" },
+      { quote: "do they do take family discounts", person: "Jimmy" },
+      { quote: "i'll take prostitute for $400", person: "Jimmy" },
+      { quote: "I was originally going to say 'i'll take her for 400 oh she's my daughter then she's free' then i changed my mind", person: "Jimmy" },
+      { quote: "i always itch my balls and dick in public", person: "Jimmy" },
+      { quote: "thinking like Mr. Groatman", person: "Dan" },
+      { quote: "Is anything really worth it if you have no job", person: "Dan" },
+      { quote: "He's trying to get gold while I'm effortlessly a platinum", person: "Dan" },
+      { quote: "Toes 🤤", person: "Dan" },
+      { quote: "Gooning to some chick being half censored by some cat", person: "Dan" },
+      { quote: "I am NOT a cuck", person: "Dan" },
+      { quote: "it just fell out", person: "Dan" },
+      { quote: "Jimmy's just jealous he's not getting that good dih", person: "Dan" },
+      { quote: "i feel like that's lowkey just porn", person: "Isaiah's mom" }
+    ];
+
+    const questionTypes = [
+      "who_said",
+      "finish_quote",
+      "fix_quote",
+      "multiple_choice"
+    ];
+
+    let mode = localStorage.getItem("mode") || "";
+    let roomCode = localStorage.getItem("roomCode") || "";
+    let playerId = localStorage.getItem("playerId") || crypto.randomUUID();
+    let playerName = localStorage.getItem("playerName") || "";
+    let roomState = null;
+    localStorage.setItem("playerId", playerId);
+
+    function $(id) { return document.getElementById(id); }
+    function show(id) { $(id).classList.remove("hidden"); }
+    function hide(id) { $(id).classList.add("hidden"); }
+    function roomRef(path = "") { return ref(db, `rooms/${roomCode}${path ? "/" + path : ""}`); }
+    function randomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function randomCode() {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let code = "";
+      for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      return code;
+    }
+
+    function normalizePersonList(person) {
+      return String(person)
+        .split(/&| and |,|\+/i)
+        .map(x => x.trim())
+        .filter(Boolean);
+    }
+
+    function uniquePeople(quotes) {
+      const set = new Set();
+      quotes.forEach(q => normalizePersonList(q.person).forEach(p => set.add(p)));
+      return [...set];
+    }
+
+    function shuffle(arr) {
+      return [...arr].sort(() => Math.random() - 0.5);
+    }
+
+    function blankFinishQuote(quote) {
+      const words = quote.split(/\s+/);
+      if (words.length <= 4) return { shown: "Finish the quote:", question: `“${words[0]}...”`, answer: quote };
+      const cut = Math.max(2, Math.floor(words.length * 0.48));
+      return {
+        question: `“${words.slice(0, cut).join(" ")}...”`,
+        answer: quote
+      };
+    }
+
+    function makeBrokenQuote(quote) {
+      const words = quote.split(/\s+/);
+      if (words.length < 3) {
+        return { broken: quote.replace(/[aeiou]/i, "___"), answer: quote };
+      }
+      const candidates = words
+        .map((w, i) => ({ w, i }))
+        .filter(x => x.w.replace(/[^\w]/g, "").length > 3);
+      const picked = candidates.length ? randomItem(candidates) : { w: words[Math.floor(words.length/2)], i: Math.floor(words.length/2) };
+      const original = picked.w;
+      const chaosWords = ["brick", "cuck", "toes", "weenier", "Diddy", "shitter", "platinum", "gaydar", "coconut"];
+      const replacement = Math.random() > .5 ? "_____" : randomItem(chaosWords);
+      words[picked.i] = replacement;
+      return {
+        broken: `“${words.join(" ")}”`,
+        answer: `Fix: replace ${replacement} with “${original}” — full quote: “${quote}”`
+      };
+    }
+
+    function makeRound(quotes) {
+      const quote = randomItem(quotes);
+      let type = randomItem(questionTypes);
+
+      if (type === "who_said") {
+        return {
+          active: true, ended: false, reveal: false,
+          type,
+          typeLabel: "Who Said It?",
+          prompt: "Who said this?",
+          display: `“${quote.quote}”`,
+          phoneDisplay: `Who said: “${quote.quote}”?`,
+          quote,
+          correctAnswer: quote.person,
+          choices: [],
+          startedAt: Date.now(),
+          duration: 30
+        };
+      }
+
+      if (type === "finish_quote") {
+        const made = blankFinishQuote(quote.quote);
+        return {
+          active: true, ended: false, reveal: false,
+          type,
+          typeLabel: "Finish The Quote",
+          prompt: "Finish the rest of the quote.",
+          display: made.question,
+          phoneDisplay: `Finish the quote: ${made.question}`,
+          quote,
+          correctAnswer: made.answer,
+          choices: [],
+          startedAt: Date.now(),
+          duration: 30
+        };
+      }
+
+      if (type === "fix_quote") {
+        const made = makeBrokenQuote(quote.quote);
+        return {
+          active: true, ended: false, reveal: false,
+          type,
+          typeLabel: "Fix The Quote",
+          prompt: "One word is changed or missing. Fix it.",
+          display: made.broken,
+          phoneDisplay: `Fix the quote: ${made.broken}`,
+          quote,
+          correctAnswer: made.answer,
+          choices: [],
+          startedAt: Date.now(),
+          duration: 30
+        };
+      }
+
+      const people = uniquePeople(quotes);
+      const correctPeople = normalizePersonList(quote.person);
+      const wrongs = shuffle(people.filter(p => !correctPeople.includes(p))).slice(0, Math.max(0, 4 - correctPeople.length));
+      const choices = shuffle([...correctPeople, ...wrongs]).slice(0, 4);
+      return {
+        active: true, ended: false, reveal: false,
+        type: "multiple_choice",
+        typeLabel: "Multiple Choice",
+        prompt: "Pick who said the quote.",
+        display: `“${quote.quote}”`,
+        phoneDisplay: `Who said: “${quote.quote}”?`,
+        quote,
+        correctAnswer: quote.person,
+        choices,
+        startedAt: Date.now(),
+        duration: 30
+      };
+    }
+
+    function chooseMode(chosen) {
+      mode = chosen;
+      localStorage.setItem("mode", mode);
+      hide("modeCard");
+      show("setupCard");
+      $("setupTitle").textContent = mode === "host" ? "Create Host Room" : "Join On Your Phone";
+      $("createBtn").style.display = mode === "host" ? "inline-block" : "none";
+      $("setupHint").textContent = mode === "host"
+        ? "Create this on the computer/TV. Phones join after."
+        : "Enter your name and the room code from the TV.";
+      $("nameInput").value = playerName;
+      $("roomInput").value = roomCode;
+    }
+
+    async function createRoom() {
+      const name = $("nameInput").value.trim() || "Host";
+      roomCode = randomCode();
+      playerName = name;
+      localStorage.setItem("roomCode", roomCode);
+      localStorage.setItem("playerName", playerName);
+      const baseRound = {
+        active: false, ended: false, reveal: false,
+        type: "waiting", typeLabel: "Waiting",
+        prompt: "Press Start Random Round",
+        display: "The question will show here.",
+        phoneDisplay: "Waiting for host...",
+        quote: null,
+        correctAnswer: "",
+        choices: [],
+        startedAt: 0,
+        duration: 30
+      };
+      await set(roomRef(), {
+        createdAt: Date.now(),
+        quotes: defaultQuotes,
+        round: baseRound,
+        players: { [playerId]: { name: playerName, score: 0, mode } },
+        answers: {},
+        showPodium: false,
+        autoGame: {
+          running: false,
+          roundNumber: 0,
+          status: "waiting",
+          nextRoundAt: 0
+        }
+      });
+      startListening();
+    }
+
+    async function joinRoom() {
+      const name = $("nameInput").value.trim();
+      const code = $("roomInput").value.trim().toUpperCase();
+      if (!name || !code) return alert("Put your name and room code.");
+      roomCode = code;
+      playerName = name;
+      localStorage.setItem("roomCode", roomCode);
+      localStorage.setItem("playerName", playerName);
+      const snap = await get(roomRef());
+      if (!snap.exists()) return alert("Room not found. Check the code.");
+      await update(roomRef(`players/${playerId}`), { name: playerName, score: 0, mode });
+      startListening();
+    }
+
+    function startListening() {
+      hide("setupCard");
+      hide("modeCard");
+      if (mode === "host") {
+        show("hostGame");
+        hide("playerGame");
+        $("hostRoomCode").textContent = roomCode;
+      } else {
+        show("playerGame");
+        hide("hostGame");
+        $("playerRoomCode").textContent = roomCode;
+      }
+      onValue(roomRef(), snap => {
+        roomState = snap.val();
+        if (!roomState) return;
+        renderAll();
+      });
+    }
+
+    function getRemaining() {
+      const round = roomState?.round || {};
+      if (!round.active || !round.startedAt) return 30;
+      const elapsed = Math.floor((Date.now() - round.startedAt) / 1000);
+      return Math.max(0, (round.duration || 30) - elapsed);
+    }
+
+    function updateTimerUI(prefix, remaining) {
+      const percent = Math.max(0, Math.min(100, (remaining / 30) * 100));
+      const wrap = prefix ? $(prefix + "TimerWrap") : $("timerWrap");
+      const ring = prefix ? $(prefix + "TimerRing") : $("timerRing");
+      const num = prefix ? $(prefix + "TimerNumber") : $("timerNumber");
+      const color = remaining <= 5 ? "#ef4444" : remaining <= 10 ? "#f59e0b" : "#22c55e";
+      ring.style.background = `conic-gradient(${color} ${percent}%, #334155 0)`;
+      num.textContent = remaining;
+      if (remaining <= 5 && remaining > 0) wrap.classList.add("timer-low");
+      else wrap.classList.remove("timer-low");
+    }
+
+    setInterval(async () => {
+      if (!roomState) return;
+      const remaining = getRemaining();
+      if (mode === "host") updateTimerUI("", remaining);
+      if (mode === "player") updateTimerUI("phone", remaining);
+
+      if (mode === "host" && roomState.autoGame?.running) {
+        if (roomState.round?.active && remaining === 0 && !roomState.round.ended) {
+          await autoScoreRound();
+          return;
+        }
+        if (roomState.autoGame?.status === "revealing" && roomState.autoGame?.nextRoundAt && Date.now() >= roomState.autoGame.nextRoundAt) {
+          await startRound();
+          return;
+        }
+      }
+    }, 250);
+
+    function renderAll() {
+      if (mode === "host") {
+        $("hostRoomCode").textContent = roomCode;
+        renderHostRound();
+        renderHostPlayers();
+        renderAnswers();
+        renderQuoteEditor();
+        renderPodiumIfShown();
+      } else {
+        $("playerRoomCode").textContent = roomCode;
+        renderPhone();
+      }
+    }
+
+    function renderHostRound() {
+      const round = roomState.round || {};
+      $("hostTypePill").textContent = `${round.typeLabel || "Waiting"} ${roomState.autoGame?.roundNumber ? "• Round " + roomState.autoGame.roundNumber : ""}`;
+      $("hostPrompt").textContent = round.prompt || "Press Start Game";
+      const statusText = roomState.autoGame?.status === "answering"
+        ? "Players are answering..."
+        : roomState.autoGame?.status === "revealing"
+          ? "Answer revealed. Next round starting automatically..."
+          : roomState.autoGame?.status === "paused"
+            ? "Paused."
+            : "Waiting to start...";
+      $("hostAutoStatus").textContent = statusText;
+      const stage = $("quoteStage");
+      if (round.type === "multiple_choice" && round.choices?.length) {
+        stage.innerHTML = `<div class="choice-grid">${round.choices.map((c, i) => `<div class="choice-box">${String.fromCharCode(65+i)}. ${escapeHtml(c)}</div>`).join("")}</div>`;
+      } else {
+        stage.innerHTML = `<div class="quote-text" id="hostQuestionDisplay">${escapeHtml(round.display || "The question will show here.")}</div>`;
+      }
+      $("hostCorrectAnswer").textContent = round.correctAnswer ? `Answer: ${round.correctAnswer}` : "";
+      $("hostCorrectAnswer").style.display = round.reveal ? "block" : "none";
+      updateTimerUI("", getRemaining());
+    }
+
+    function renderPhone() {
+      const me = roomState.players?.[playerId];
+      const round = roomState.round || {};
+      $("myScore").textContent = me?.score || 0;
+      $("playerStatus").textContent = `Signed in as ${playerName}`;
+      $("phoneTypePill").textContent = round.typeLabel || "Waiting";
+      $("phoneQuestionDisplay").textContent = round.phoneDisplay || "Waiting for host...";
+      updateTimerUI("phone", getRemaining());
+
+      const myAnswer = roomState.answers?.[playerId];
+      const canAnswer = round.active && !myAnswer;
+
+      if (round.type === "multiple_choice" && round.choices?.length) {
+        hide("phoneTextAnswer");
+        show("phoneMultipleChoice");
+        $("phoneMultipleChoice").innerHTML = round.choices.map((choice, i) => `
+          <button class="phone-choice ${myAnswer?.answer === choice ? "selected" : ""}" ${!canAnswer ? "disabled" : ""} onclick="submitChoice('${escapeForAttr(choice)}')">
+            ${String.fromCharCode(65+i)}. ${escapeHtml(choice)}
+          </button>
+        `).join("");
+      } else {
+        show("phoneTextAnswer");
+        hide("phoneMultipleChoice");
+        $("phoneGuessInput").disabled = !canAnswer;
+        $("submitBtn").disabled = !canAnswer;
+      }
+
+      if (!round.quote) $("guessStatus").textContent = "";
+      else if (myAnswer) $("guessStatus").textContent = `Submitted: ${myAnswer.answer}`;
+      else if (round.active) $("guessStatus").textContent = "Answer before the timer hits 0.";
+      else $("guessStatus").textContent = "Time is up. Waiting for host.";
+
+      $("phoneCorrectAnswer").textContent = round.correctAnswer ? `Answer: ${round.correctAnswer}` : "";
+      $("phoneCorrectAnswer").style.display = round.reveal ? "block" : "none";
+    }
+
+    function renderHostPlayers() {
+      const div = $("hostPlayers");
+      div.innerHTML = "";
+      Object.entries(roomState.players || {}).forEach(([id, player]) => {
+        const card = document.createElement("div");
+        card.className = "player-card";
+        card.innerHTML = `
+          <div class="player-name">${escapeHtml(player.name)}</div>
+          <div class="score">${player.score || 0}</div>
+          <div class="score-buttons">
+            <button onclick="changeScore('${id}', 100)">+100</button>
+            <button onclick="changeScore('${id}', -100)">-100</button>
+          </div>`;
+        div.appendChild(card);
+      });
+    }
+
+    function renderAnswers() {
+      const div = $("hostAnswers");
+      div.innerHTML = "";
+      const answers = roomState.answers || {};
+      const players = roomState.players || {};
+      if (Object.keys(answers).length === 0) {
+        div.innerHTML = `<p class="small">No answers yet.</p>`;
+        return;
+      }
+      Object.entries(answers).forEach(([id, ans]) => {
+        const name = players[id]?.name || "Player";
+        const card = document.createElement("div");
+        const hasResult = typeof ans.correct === "boolean";
+        card.className = `answer-card ${hasResult ? (ans.correct ? "correct-card" : "wrong-card") : ""}`;
+        card.innerHTML = `
+          <strong>${escapeHtml(name)}</strong>
+          <div class="answer-text">${escapeHtml(ans.answer)}</div>
+          ${hasResult ? `<span class="auto-badge ${ans.correct ? "correct-badge" : "wrong-badge"}">${ans.correct ? "AUTO CORRECT +100" : "AUTO WRONG"}</span>` : `<span class="auto-badge">Waiting for score</span>`}
+          <div class="score-buttons">
+            <button onclick="changeScore('${id}', 100)">+100</button>
+            <button onclick="changeScore('${id}', 250)">+250</button>
+            <button onclick="changeScore('${id}', 500)">+500</button>
+            <button onclick="changeScore('${id}', -100)">-100</button>
+          </div>`;
+        div.appendChild(card);
+      });
+    }
+
+    async function startRound() {
+      const round = makeRound(roomState.quotes || defaultQuotes);
+      const rn = (roomState.autoGame?.roundNumber || 0) + 1;
+      await update(roomRef(), {
+        round,
+        answers: {},
+        showPodium: false,
+        autoGame: {
+          running: true,
+          roundNumber: rn,
+          status: "answering",
+          nextRoundAt: 0
+        }
+      });
+    }
+
+    async function startAutoGame() {
+      await update(roomRef("autoGame"), {
+        running: true,
+        roundNumber: roomState.autoGame?.roundNumber || 0,
+        status: "starting",
+        nextRoundAt: 0
+      });
+      await startRound();
+    }
+
+    async function pauseAutoGame() {
+      await update(roomRef("autoGame"), {
+        ...(roomState.autoGame || {}),
+        running: false,
+        status: "paused",
+        nextRoundAt: 0
+      });
+    }
+
+    function normalizeAnswer(text) {
+      return String(text || "")
+        .toLowerCase()
+        .replace(/[“”‘’]/g, "'")
+        .replace(/[^a-z0-9\s']/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function levenshtein(a, b) {
+      a = normalizeAnswer(a);
+      b = normalizeAnswer(b);
+      const matrix = Array.from({ length: b.length + 1 }, (_, i) => [i]);
+      for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+      for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+          matrix[i][j] = b[i - 1] === a[j - 1]
+            ? matrix[i - 1][j - 1]
+            : Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+        }
+      }
+      return matrix[b.length][a.length];
+    }
+
+    function similarity(a, b) {
+      a = normalizeAnswer(a);
+      b = normalizeAnswer(b);
+      if (!a || !b) return 0;
+      const longer = a.length > b.length ? a : b;
+      const shorter = a.length > b.length ? b : a;
+      if (longer.length === 0) return 1;
+      return (longer.length - levenshtein(longer, shorter)) / longer.length;
+    }
+
+    function getCorrectPeople(person) {
+      return normalizePersonList(person).map(normalizeAnswer);
+    }
+
+    function isCorrectAnswer(round, answer) {
+      const clean = normalizeAnswer(answer);
+      if (!clean || !round?.quote) return false;
+
+      if (round.type === "who_said" || round.type === "multiple_choice") {
+        const correctPeople = getCorrectPeople(round.quote.person);
+        return correctPeople.some(p => clean === p || clean.includes(p) || p.includes(clean));
+      }
+
+      if (round.type === "finish_quote") {
+        return similarity(clean, round.correctAnswer) >= 0.80 || normalizeAnswer(round.correctAnswer).includes(clean);
+      }
+
+      if (round.type === "fix_quote") {
+        const fullQuote = round.quote.quote;
+        const correctFull = similarity(clean, fullQuote) >= 0.80;
+        const answerText = normalizeAnswer(round.correctAnswer);
+        return correctFull || similarity(clean, answerText) >= 0.72 || answerText.includes(clean);
+      }
+
+      return false;
+    }
+
+    async function autoScoreRound() {
+      const round = roomState.round;
+      const answers = roomState.answers || {};
+      const players = roomState.players || {};
+      const updates = {};
+      Object.entries(answers).forEach(([id, ans]) => {
+        const correct = isCorrectAnswer(round, ans.answer);
+        updates[`answers/${id}/correct`] = correct;
+        if (correct) {
+          updates[`players/${id}/score`] = (players[id]?.score || 0) + 100;
+        }
+      });
+      updates["round/reveal"] = true;
+      updates["round/active"] = false;
+      updates["round/ended"] = true;
+      updates["autoGame/status"] = "revealing";
+      updates["autoGame/nextRoundAt"] = Date.now() + 7000;
+      await update(roomRef(), updates);
+    }
+
+    async function submitTextGuess() {
+      const answer = $("phoneGuessInput").value.trim();
+      if (!answer || !roomState.round?.active) return;
+      await set(roomRef(`answers/${playerId}`), { answer, submittedAt: Date.now() });
+      $("phoneGuessInput").value = "";
+    }
+
+    async function submitChoice(choice) {
+      if (!choice || !roomState.round?.active) return;
+      await set(roomRef(`answers/${playerId}`), { answer: choice, submittedAt: Date.now() });
+    }
+
+    async function revealAnswer() {
+      await update(roomRef("round"), { reveal: true, active: false, ended: true });
+    }
+
+    async function changeScore(id, amount) {
+      const current = roomState.players?.[id]?.score || 0;
+      await update(roomRef(`players/${id}`), { score: current + amount });
+    }
+
+    async function resetRoom() {
+      if (!confirm("Reset scores and current round?")) return;
+      const resetPlayers = {};
+      Object.entries(roomState.players || {}).forEach(([id, p]) => resetPlayers[id] = { ...p, score: 0 });
+      await update(roomRef(), {
+        players: resetPlayers,
+        answers: {},
+        showPodium: false,
+        autoGame: {
+          running: false,
+          roundNumber: 0,
+          status: "waiting",
+          nextRoundAt: 0
+        },
+        round: {
+          active: false, ended: false, reveal: false,
+          type: "waiting", typeLabel: "Waiting",
+          prompt: "Press Start Random Round",
+          display: "The question will show here.",
+          phoneDisplay: "Waiting for host...",
+          quote: null,
+          correctAnswer: "",
+          choices: [],
+          startedAt: 0,
+          duration: 30
+        }
+      });
+    }
+
+    async function showPodium() {
+      await update(roomRef(), { showPodium: true });
+      renderPodiumIfShown();
+      $("podiumCard").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function renderPodiumIfShown() {
+      if (!roomState.showPodium) {
+        hide("podiumCard");
+        return;
+      }
+      show("podiumCard");
+      const sorted = Object.values(roomState.players || {})
+        .sort((a,b) => (b.score || 0) - (a.score || 0))
+        .slice(0,3);
+      const labels = [
+        { cls: "first", medal: "🥇", place: "1st" },
+        { cls: "second", medal: "🥈", place: "2nd" },
+        { cls: "third", medal: "🥉", place: "3rd" }
+      ];
+      $("podium").innerHTML = sorted.map((p, i) => `
+        <div class="podium-place ${labels[i].cls}">
+          <div class="medal">${labels[i].medal}</div>
+          <div>${labels[i].place}</div>
+          <div class="podium-name">${escapeHtml(p.name)}</div>
+          <div class="podium-score">${p.score || 0} pts</div>
+        </div>`).join("");
+    }
+
+    function renderQuoteEditor() {
+      const editor = $("quoteEditor");
+      if (document.activeElement === editor) return;
+      editor.value = (roomState.quotes || defaultQuotes).map(q => `${q.quote} | ${q.person}`).join("\n");
+    }
+
+    async function saveQuotesToRoom() {
+      const parsed = $("quoteEditor").value.split("\n").map(line => {
+        const parts = line.split("|");
+        if (parts.length < 2) return null;
+        const person = parts.pop().trim();
+        const quote = parts.join("|").trim();
+        return quote && person ? { quote, person } : null;
+      }).filter(Boolean);
+      if (parsed.length < 5) return alert("Add at least 5 valid quotes.");
+      await update(roomRef(), { quotes: parsed });
+      alert("Quotes saved.");
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>'"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;" }[c]));
+    }
+    function escapeForAttr(str) {
+      return String(str).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    }
+
+    window.chooseMode = chooseMode;
+    window.createRoom = createRoom;
+    window.joinRoom = joinRoom;
+    window.startRound = startRound;
+    window.startAutoGame = startAutoGame;
+    window.pauseAutoGame = pauseAutoGame;
+    window.submitTextGuess = submitTextGuess;
+    window.submitChoice = submitChoice;
+    window.revealAnswer = revealAnswer;
+    window.changeScore = changeScore;
+    window.resetRoom = resetRoom;
+    window.showPodium = showPodium;
+    window.saveQuotesToRoom = saveQuotesToRoom;
+  </script>
+</body>
+</html>
